@@ -8,7 +8,7 @@ Created on Mon Apr 27 21:44:48 2020
 
 import yfinance as yf
 import matplotlib.pyplot as plt
-from datetime import timedelta
+from datetime import timedelta 
 
 ticker = "YRI.TO"
 prd = "1mo"
