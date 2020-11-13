@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """
+stock_pull.py
+This file creates the database architecture required to hold all the stock data, 
+and pulls said stock data into the database
 Created on Mon Apr 27 21:44:48 2020
 
 @author: Gregoireg
@@ -36,7 +39,7 @@ def createSchema():
     conn.commit()
     conn.close()
     
-createSchema()
+# createSchema()
 
 #%% Find StockID Function
 import sqlite3
@@ -74,23 +77,23 @@ def findStockID(ticker, name = None, market = None):
     return StockID[0]
     
 # Usage
-ID = findStockID("MSFT")
-print(ID)
+# ID = findStockID("MSFT")
+# print(ID)
 
 #%% Download and plot data
-import yfinance as yf
-import matplotlib.pyplot as plt
-from datetime import timedelta 
+# import yfinance as yf
+# import matplotlib.pyplot as plt
+# from datetime import timedelta 
 
-ticker = "FR.TO"
-prd = "1mo"
-intvl = "30m"
-data = yf.download(tickers= ticker, period=prd, interval=intvl)
-data = data.reset_index()
-# print(data)
+# ticker = "FR.TO"
+# prd = "1mo"
+# intvl = "30m"
+# data = yf.download(tickers= ticker, period=prd, interval=intvl)
+# data = data.reset_index()
+# # print(data)
 
-stock = yf.Ticker("FR.TO").info()
-print(stock)
+# stock = yf.Ticker("FR.TO").info()
+# print(stock)
 #val = data['Close'][-1:]
 #price = price.append(val, ignore_index=True)
 #print(price)
@@ -99,36 +102,24 @@ print(stock)
 #print(time+timedelta(minutes=15))
 
 #%% Insert Data into DB
-conn = sqlite3.connect('StockData.db')
-conn.execute("PRAGMA foreign_keys = 1") # This needs to be set for FK constraint to work
-c = conn.cursor()
+# conn = sqlite3.connect('StockData.db')
+# conn.execute("PRAGMA foreign_keys = 1") # This needs to be set for FK constraint to work
+# c = conn.cursor()
 
-ticker = "YRI.TO"
-ID = findStockID(ticker)
-#c.execute("INSERT INTO StockNames (StockTicker, StockName, Market) VALUES ('GOLD', 'Barrick Gold', 'NYSE')")
-#c.execute("INSERT INTO StockNames (StockTicker, StockName, Market) VALUES ('YRI.TO', 'Yamana Gold', 'TSX')")
-# c.execute("INSERT INTO StockPrice (StockID, DateTimeStamp, Price, Volume) VALUES (1, '2020-04-21 09:30:00-04:00', 25.15, 936336)")
-# c.executemany('INSERT INTO StockPrice (StockID, DateTimeStamp, Price, Volume) VALUES (?, ?, ?, ?)', values)
+# ticker = "YRI.TO"
+# ID = findStockID(ticker)
+# #c.execute("INSERT INTO StockNames (StockTicker, StockName, Market) VALUES ('GOLD', 'Barrick Gold', 'NYSE')")
+# #c.execute("INSERT INTO StockNames (StockTicker, StockName, Market) VALUES ('YRI.TO', 'Yamana Gold', 'TSX')")
+# # c.execute("INSERT INTO StockPrice (StockID, DateTimeStamp, Price, Volume) VALUES (1, '2020-04-21 09:30:00-04:00', 25.15, 936336)")
+# # c.executemany('INSERT INTO StockPrice (StockID, DateTimeStamp, Price, Volume) VALUES (?, ?, ?, ?)', values)
 
-conn.commit()
-conn.close()
-
-#%% View Data
-
-conn = sqlite3.connect('StockData.db')
-c = conn.cursor()
-
-for row in c.execute('Select * from StockPrice'):
-# for row in c.execute('Select * from StockNames'):
-    print(row)
-
-conn.commit()
-conn.close()
+# conn.commit()
+# conn.close()
 
 #%% logData function. 
 # Downloads data based on time ranges, pulls stock ID and logs data to DB
 
-def logData (ticker, startDate = None, endDate = None, interval = "15m", period = "1w", show = False, plot = False):
+def logData (ticker, startDate = None, endDate = None, interval = "15m", period = "1d", show = False, plot = False):
     # yfinance constraints
     # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
     # (optional, default is '1mo')
@@ -164,7 +155,7 @@ def logData (ticker, startDate = None, endDate = None, interval = "15m", period 
     for i in range(length):
         values.append((stockID, str(datetime[i])[:-6], price[i], volume[i]))
         date.append(str(datetime[i])[:-6])
-    
+    print(values)
     conn = sqlite3.connect('StockData.db')
     conn.execute("PRAGMA foreign_keys = 1") # This needs to be set for FK constraint to work
     c = conn.cursor()
@@ -173,10 +164,12 @@ def logData (ticker, startDate = None, endDate = None, interval = "15m", period 
     
     conn.commit()
     
+    # Show the data that was logged
     if show == True:
         for row in c.execute('Select * from StockPrice'):
             print(row)
-            
+    
+    # Plot the data that was logged
     if plot == True:
         plt.plot(date, price)
             
@@ -184,35 +177,67 @@ def logData (ticker, startDate = None, endDate = None, interval = "15m", period 
     
 #%% View Data Func
 
-def viewData(ticker, startDate, endDate):
+def viewData(ticker, startDate = None, endDate = None, plot = False):
     
+    import datetime as d
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    
+    now = d.datetime.now()
+    today = d.datetime(now.year, now.month, now.day)
+    today_start = today + d.timedelta(hours=9)
+    today_end = today + d.timedelta(hours=16.5)
+
+    if startDate == None: startDate = today_start
+    if endDate == None: endDate = today_end
     stockID = findStockID(ticker)
-    print(stockID)
+    
     conn = sqlite3.connect('StockData.db')
     c = conn.cursor()
-    for row in c.execute('Select * from StockPrice where StockID = ? and DateTimeStamp BETWEEN ? and ?', (stockID, startDate, endDate)):
+    values = np.empty((1,5))
+    c.execute('Select * from StockPrice where StockID = ? and DateTimeStamp BETWEEN ? and ?', (stockID, startDate, endDate))
     # for row in c.execute('Select * from StockPrice where StockID = 2 and DateTimeStamp BETWEEN "2020-06-01 00:00:00" and "2020-06-06 00:00:00"'):# and DateTimeStamp <= 2020-06-08'):
-        print(row)
+        # print(c.fetchone()[3])
+        # np.append(values, row , axis=0)
+    for data in c.fetchall():
+        print(data)
+        values = np.append(values, [data], axis=0)
+    values = np.delete(values,0,0)
+    # data = c.fetchall()[1]
+    # np.append(values, data)
+    
+    # Plot the data that was logged
+    if plot == True:
+        price = values[:,3]
+        plt.plot(price)
+    
     conn.close()
+    
+    # print(values)
+    return values
 
-viewData("YRI.TO", "2020-06-01", "2020-06-08")
-  
-  
+# data = viewData("YRI.TO")
+# data = viewData("YRI.TO", startDate = "2020-07-01", endDate = "2020-07-28", plot=True)
+# print(data)
+
+
 #%% Test Calls
 #import sqlite3
 
-conn = sqlite3.connect('StockData.db')
+# conn = sqlite3.connect('StockData.db')
 # conn.execute("PRAGMA foreign_keys = 1") # This needs to be set for FK constraint to work
-c = conn.cursor()
+# c = conn.cursor()
 
-ticker = 'YRI.TO'
-start = '2020-06-08'
-end = '2020-06-09'
-interv = "30m"
-prd = "1mo"
+# ticker = 'YRI.TO'
+# start = '2020-07-01'
+# end = '2020-07-28'
+# interv = "5m"
+# prd = "1mo"
 
-# logData(ticker = ticker, startDate = start, endDate = end, show = True)
-values = logData(ticker = ticker, interval = interv, period = prd, show = True, plot = True)
+# logData(ticker = ticker, startDate = start, endDate = end, interval = interv, show = True) # log based on start/end date
+# logData(ticker = ticker, show = True) # log with default values (1 day, 15min)
+# logData(ticker = ticker, interval = interv, period = prd, show = True) # log based on interval and period
 
 # c.execute('Select * from StockNames')
 # for i in range(2):
@@ -222,6 +247,7 @@ values = logData(ticker = ticker, interval = interv, period = prd, show = True, 
 # c.execute('Delete from StockPrice')
 # c.execute('Drop Table StockPrice')
 # print(c.fetchall())
-conn.commit()
-conn.close()
+# conn.commit()
+# conn.close()
+
 
