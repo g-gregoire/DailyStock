@@ -7,13 +7,20 @@ Created on Mon Apr 27 21:44:48 2020
 
 @author: Gregoireg
 """
+#%% Import Required packages, functions, and initialize DB schema
+import sqlite3
+import yfinance as yf
+import matplotlib.pyplot as plt
+import datetime as d
+# from datetime import timedelta 
+# import pandas as pd
+import numpy as np
+import os
+path = os.path.expanduser("~/Documents/Github/DailyStock") #Set Correct path
+os.chdir(path)
 
 # Create DB Tables and set path
 def createSchema():
-    import sqlite3
-    import os
-    path = os.path.expanduser("~/Documents/Github/DailyStock") #Set Correct path
-    os.chdir(path)
     
     conn = sqlite3.connect('StockData.db')
     conn.execute("PRAGMA foreign_keys = 1") # This needs to be set for FK constraint to work
@@ -42,9 +49,7 @@ def createSchema():
 
 
 # Find StockID Function
-def findStockID(ticker, name = None, market = None):
-    import sqlite3
-    import yfinance as yf
+def findStockID(ticker, name = None, market = None):    
 
     conn = sqlite3.connect('StockData.db')
     c = conn.cursor()
@@ -84,13 +89,6 @@ def logData (ticker, startDate = None, endDate = None, interval = "15m", period 
     # valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
     # (optional, default is '1d')
     # intraday interval allowed if period < 60 days
-    
-    import sqlite3
-    import yfinance as yf
-    import matplotlib.pyplot as plt
-    from datetime import timedelta 
-    import pandas as pd
-    import numpy as np
     
     # Download Data from yfinance
     if startDate == None:
@@ -137,12 +135,6 @@ def logData (ticker, startDate = None, endDate = None, interval = "15m", period 
 # View Data Func
 def viewData(ticker, startDate = None, endDate = None, plot = False):
     
-    import datetime as d
-    import numpy as np
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    import sqlite3
-    
     now = d.datetime.now()
     today = d.datetime(now.year, now.month, now.day)
     today_start = today + d.timedelta(hours=9)
@@ -156,9 +148,7 @@ def viewData(ticker, startDate = None, endDate = None, plot = False):
     c = conn.cursor()
     values = np.empty((1,5))
     c.execute('Select * from StockPrice where StockID = ? and DateTimeStamp BETWEEN ? and ?', (stockID, startDate, endDate))
-    # for row in c.execute('Select * from StockPrice where StockID = 2 and DateTimeStamp BETWEEN "2020-06-01 00:00:00" and "2020-06-06 00:00:00"'):# and DateTimeStamp <= 2020-06-08'):
-        # print(c.fetchone()[3])
-        # np.append(values, row , axis=0)
+
     for data in c.fetchall():
         print(data)
         values = np.append(values, [data], axis=0)

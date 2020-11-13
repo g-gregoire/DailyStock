@@ -18,16 +18,6 @@ import numpy as np
 # - createSchema: creates DB and sets path
 # - logdata: logs data for specific time interval to DB
 # - viewData: prints data for specific time range
-# db.createSchema()
-
-#%% Log Data to DB
-
-# db.logData("YRI.TO") #default is one day
-
-#%% Pull Data from DB
-
-# data = db.viewData("YRI.TO", startDate = "2020-07-01", endDate = "2020-07-28") #default is last day
-# print(data.size/5)
 
 #%% Create Data Structure for Tensorflow
 

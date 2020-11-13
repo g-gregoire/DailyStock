@@ -41,6 +41,3 @@ history = dataModel.runModel(model, ds_train, epoch=5)
 
 forecast = dataModel.predict(model, data, window_size = 30, batch_size = 10)
 
-# forecast = forecast[:, -1, 0]
-# print(forecast)
-
