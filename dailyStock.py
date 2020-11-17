@@ -10,7 +10,7 @@ import os
 path = os.path.expanduser("~/Documents/Github/DailyStock") #Set Correct path
 os.chdir(path)
 import DB_func as db # internal functions for database/stock pulls
-import dataModel as dataModel # data & model creation
+import dataModel # data & model creation
 
 #Create Database if not yet created
 db.createSchema()

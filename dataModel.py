@@ -45,7 +45,7 @@ def createDS(data, split_p = 0.8, window_size = 20, batch_size = 10, shuffle_siz
 
 #%% Create then compile and fit Tensorflow model
 
-def createModel():
+def createModel(): 
     tf.keras.backend.clear_session()
     model = tf.keras.models.Sequential([
       tf.keras.layers.Conv1D(filters=60, kernel_size=5,
