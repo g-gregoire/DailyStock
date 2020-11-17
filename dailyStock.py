@@ -11,6 +11,7 @@ path = os.path.expanduser("~/Documents/Github/DailyStock") #Set Correct path
 os.chdir(path)
 import DB_func as db # internal functions for database/stock pulls
 import dataModel # data & model creation
+import matplotlib.pyplot as plt
 
 #Create Database if not yet created
 db.createSchema()
@@ -33,21 +34,17 @@ db.logData(ticker, interval = "15m", period = "1mo")
 
 #%% Pull Data from DB
 
-data = db.viewData("YRI.TO", period = "1mo", plot = False)
-# data = db.viewData(ticker, startDate = "2020-07-01", endDate = "2020-07-28") #default is last day
+data = db.viewData("YRI.TO", period = "1mo", plot = True)
+# data = db.viewData(ticker, startDate = "2020-11-01", endDate = "2020-11-28") #default is last day
 
 #%% Test Model Calls
 
 price, ds_train = dataModel.createDS(data, window_size = 30, batch_size = 10)
 model = dataModel.createModel()
-history = dataModel.runModel(model, ds_train, epoch=500)
+history = dataModel.runModel(model, ds_train, epoch=100)
 
 #%% Forecast calls
 
 forecast = dataModel.predict(model, data, window_size = 30, batch_size = 10)
-# print(data.size)
-# print(forecast.size)
-
-import matplotlib.pyplot as plt
 plt.plot(forecast)
-# plt.plot(data)
+
