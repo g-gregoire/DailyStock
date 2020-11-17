@@ -12,8 +12,7 @@ import sqlite3
 import yfinance as yf
 import matplotlib.pyplot as plt
 import datetime as d
-# from datetime import timedelta 
-# import pandas as pd
+from dateutil.relativedelta import *
 import numpy as np
 import os
 path = os.path.expanduser("~/Documents/Github/DailyStock") #Set Correct path
@@ -46,7 +45,6 @@ def createSchema():
     
     conn.commit()
     conn.close()
-
 
 # Find StockID Function
 def findStockID(ticker, name = None, market = None):    
@@ -131,17 +129,34 @@ def logData (ticker, startDate = None, endDate = None, interval = "15m", period 
             
     conn.close()
     
-    
-# View Data Func
-def viewData(ticker, startDate = None, endDate = None, plot = False):
+#%% View Data Func
+
+def viewData(ticker, startDate = None, endDate = None, period = "1d", plot = False):
     
     now = d.datetime.now()
     today = d.datetime(now.year, now.month, now.day)
-    today_start = today + d.timedelta(hours=9)
-    today_end = today + d.timedelta(hours=16.5)
+    
+    if startDate == None:
+        
+        if period == "1d":
+            startDate = today - d.timedelta(days=1)
+            endDate = today
+            
+        elif period == "1wk":
+            startDate = today - d.timedelta(weeks=1)
+            endDate = today
+        
+        elif period == "1mo":
+            startDate = today + relativedelta(months=-1)
+            endDate = today
+    
+    else:
+        startDate = d.datetime.strptime(startDate, '%Y-%m-%d')
+        endDate = d.datetime.strptime(endDate, '%Y-%m-%d')
 
-    if startDate == None: startDate = today_start
-    if endDate == None: endDate = today_end
+    startDate = startDate + d.timedelta(hours=9)
+    endDate = endDate + d.timedelta(hours=16.5)
+
     stockID = findStockID(ticker)
     
     conn = sqlite3.connect('StockData.db')
@@ -153,15 +168,24 @@ def viewData(ticker, startDate = None, endDate = None, plot = False):
         print(data)
         values = np.append(values, [data], axis=0)
     values = np.delete(values,0,0)
-    # data = c.fetchall()[1]
-    # np.append(values, data)
     
     # Plot the data that was logged
     if plot == True:
-        price = values[:,3]
-        plt.plot(price)
+        price = values[:,3].astype(np.float)
+        date = values[:,1]
+        plt.plot(date, price)
     
     conn.close()
     
-    # print(values)
     return values
+
+#%% Clear the price databases
+def clearData():
+    
+    conn = sqlite3.connect('StockData.db')
+    c = conn.cursor()
+    
+    c.execute('Delete from StockPrice')
+    
+    conn.commit()            
+    conn.close()
