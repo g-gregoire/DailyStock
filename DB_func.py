@@ -173,19 +173,24 @@ def viewData(ticker, startDate = None, endDate = None, period = "1d", plot = Fal
     if plot == True:
         price = values[:,3].astype(np.float)
         date = values[:,1]
-        plt.plot(date, price)
+        #plt.plot(date, price)
+        plt.plot(price)
     
     conn.close()
     
     return values
 
 #%% Clear the price databases
-def clearData():
+def clearData(mode = 1):
     
     conn = sqlite3.connect('StockData.db')
     c = conn.cursor()
     
-    c.execute('Delete from StockPrice')
+    if mode ==1:
+        c.execute('Delete from StockPrice')
+    elif mode ==2:
+        c.execute('Drop Table StockPrice')
+        createSchema() #recreate table again
     
     conn.commit()            
     conn.close()
